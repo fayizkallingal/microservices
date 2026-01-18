@@ -31,13 +31,13 @@ jobs:
           docker build -t fayiz007/frontend:v1 frontend
           docker push fayiz007/frontend:v1
 
-      - name: Deploy to Kubernetes (SSH)
+      - name: Deploy to Kubernetes via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/microservices
+            cd /home/deployer/microservices
             kubectl apply -f k8s/
 
