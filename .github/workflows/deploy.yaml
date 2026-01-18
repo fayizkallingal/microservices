@@ -1,0 +1,45 @@
+name: Deploy Microservices
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Login to Docker Hub
+      run: |
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
+        -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+    - name: Build & Push user-service
+      run: |
+        docker build -t fayiz007/user-service:v1 user-service
+        docker push fayiz007/user-service:v1
+
+    - name: Build & Push order-service
+      run: |
+        docker build -t fayiz007/order-service:v1 order-service
+        docker push fayiz007/order-service:v1
+
+    - name: Build & Push frontend
+      run: |
+        docker build -t fayiz007/frontend:v1 frontend
+        docker push fayiz007/frontend:v1
+
+    - name: Setup kubeconfig
+      run: |
+        echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+        export KUBECONFIG=$PWD/kubeconfig
+        kubectl version --client
+
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f k8s/
+
