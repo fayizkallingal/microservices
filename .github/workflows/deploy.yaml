@@ -1,4 +1,4 @@
-name: Deploy Microservices
+name: Deploy Microservices via SSH
 
 on:
   push:
@@ -31,12 +31,13 @@ jobs:
           docker build -t fayiz007/frontend:v1 frontend
           docker push fayiz007/frontend:v1
 
-      - name: Setup kubeconfig
-        run: |
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
-          export KUBECONFIG=$PWD/kubeconfig
-          kubectl version --client
+      - name: Deploy to Kubernetes (SSH)
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/microservices
+            kubectl apply -f k8s/
 
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl apply -f k8s/ --validate=false
